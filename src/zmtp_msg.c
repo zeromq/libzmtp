@@ -1,7 +1,16 @@
-//  Message class
+/*  =========================================================================
+    zmtp_msg - message class
 
-#include <stdlib.h>
-#include "../include/zmtp_msg.h"
+    Copyright contributors as noted in the AUTHORS file.
+    This file is part of libzmtp, the C ZMTP stack.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    =========================================================================
+*/
+
+#include "../include/zmtp.h"
 
 struct zmtp_msg {
     byte flags;

@@ -1,6 +1,7 @@
 libzmtp
 =======
-Implementation of ZMTP stack in C
+
+An implementation of a ZMTP stack in C.
 
 ## Ownership and Contributing
 

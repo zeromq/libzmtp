@@ -1,13 +1,19 @@
-//  ZMTP connection class
+/*  =========================================================================
+    zmtp_connection - connection class
 
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdint.h>
+    Copyright contributors as noted in the AUTHORS file.
+    This file is part of libzmtp, the C ZMTP stack.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    =========================================================================
+*/
+
 #include "../include/zmtp.h"
-#include "../include/zmtp_msg.h"
-#include "../include/zmtp_connection.h"
 
 //  ZMTP greeting (64 bytes)
+
 struct zmtp_greeting {
     byte signature [10];
     byte version [2];
@@ -107,7 +113,7 @@ s_recv_msg (zmtp_connection_t *self)
     else {
         byte buffer [8];
         tcp_recv (self->fd, buffer, sizeof buffer);
-        const uint64_t msg_size =
+        msg_size =
             (uint64_t) buffer [7] << 56 |
             (uint64_t) buffer [6] << 48 |
             (uint64_t) buffer [5] << 40 |
@@ -161,7 +167,7 @@ zmtp_connection_negotiate (zmtp_connection_t *self)
     tcp_recv (self->fd, incoming.as_server, sizeof incoming.as_server);
     tcp_recv (self->fd, incoming.filler, sizeof incoming.filler);
     //  Send READY command
-    zmtp_msg_t *ready = zmtp_msg_new (0x04, strdup ("READY   "), 8);
+    zmtp_msg_t *ready = zmtp_msg_new (0x04, (byte *) strdup ("READY   "), 8);
     assert (ready);
     s_send_msg (self, ready);
     zmtp_msg_destroy (&ready);
