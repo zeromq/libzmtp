@@ -25,6 +25,9 @@ zmtp_dealer_t *
 zmtp_dealer_t *
     zmtp_dealer_ipc_connect (const char *addr);
 
+zmtp_dealer_t *
+    zmtp_dealer_tcp_connect (const char *addr, unsigned short port);
+
 void
     zmtp_dealer_destroy (zmtp_dealer_t **self_p);
 
