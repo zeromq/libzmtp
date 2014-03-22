@@ -1,15 +1,23 @@
-//  ZMTP connection class
+/*  =========================================================================
+    zmtp_connection - connection class
+
+    Copyright contributors as noted in the AUTHORS file.
+    This file is part of libzmtp, the C ZMTP stack.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    =========================================================================
+*/
 
 #ifndef __ZMTP_CONNECTION_H_INCLUDED__
 #define __ZMTP_CONNECTION_H_INCLUDED__
 
+typedef struct zmtp_connection zmtp_connection_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "../include/zmtp_msg.h"
-
-typedef struct zmtp_connection zmtp_connection_t;
 
 zmtp_connection_t *
     zmtp_connection_new (int fd, int socktype);

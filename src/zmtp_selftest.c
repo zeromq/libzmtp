@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zmtp_msg - message class
+    zmtp_selftest - run self tests
 
     Copyright contributors as noted in the AUTHORS file.
     This file is part of libzmtp, the C ZMTP stack.
@@ -10,32 +10,18 @@
     =========================================================================
 */
 
-#ifndef __ZMTP_MSG_H_INCLUDED__
-#define __ZMTP_MSG_H_INCLUDED__
+#include "../include/zmtp.h"
 
-typedef struct zmtp_msg zmtp_msg_t;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-zmtp_msg_t *
-    zmtp_msg_new (byte flags, byte *msg_data, size_t msg_size);
-
-void
-    zmtp_msg_destroy (zmtp_msg_t **self_p);
-
-byte
-    zmtp_msg_flags (zmtp_msg_t *self);
-
-byte *
-    zmtp_msg_data (zmtp_msg_t *self);
-
-size_t
-    zmtp_msg_size (zmtp_msg_t *self);
-
-#ifdef __cplusplus
+int main (int argc, char *argv [])
+{
+//     bool verbose;
+//     if (argc == 2 && strcmp (argv [1], "-v") == 0)
+//         verbose = true;
+//     else
+//         verbose = false;
+// 
+//     printf ("Running self tests...\n");
+//     zmtp_msg_test (verbose);
+//     printf ("Tests passed OK\n");
+    return 0;
 }
-#endif
-
-#endif
