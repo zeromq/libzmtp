@@ -60,6 +60,43 @@ zmtp_dealer_ipc_connect (const char *addr)
     }
 }
 
+zmtp_dealer_t *
+zmtp_dealer_tcp_connect (const char *addr, unsigned short port)
+{
+    char service [8 + 1];
+    snprintf (service, sizeof service, "%u", port);
+
+    //  Create socket
+    const int s = socket (AF_INET, SOCK_STREAM, 0);
+    if (s == -1)
+        return NULL;
+    //  Resolve address
+    const struct addrinfo hints = {
+        .ai_family   = AF_INET,
+        .ai_socktype = SOCK_STREAM,
+        .ai_flags    = AI_NUMERICHOST | AI_NUMERICSERV
+    };
+    struct addrinfo *result = NULL;
+    if (getaddrinfo (addr, service, &hints, &result)) {
+        close (s);
+        return NULL;
+    }
+    assert (result);
+    //  Create socket
+    const int rc = connect (s, result->ai_addr, result->ai_addrlen);
+    freeaddrinfo (result);
+    if (rc == -1) {
+        close (s);
+        return NULL;
+    }
+    else {
+        zmtp_dealer_t *self = zmtp_dealer_new (s);
+        if (!self)
+            close (s);
+        return self;
+    }
+}
+
 void
 zmtp_dealer_destroy (zmtp_dealer_t **self_p)
 {
