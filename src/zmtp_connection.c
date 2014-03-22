@@ -173,13 +173,14 @@ zmtp_connection_negotiate (zmtp_connection_t *self)
     return 0;
 }
 
-void
+int
 zmtp_connection_send (zmtp_connection_t *self, zmtp_msg_t *msg)
 {
     assert (self);
     assert (msg);
 
     s_send_msg (self, msg);
+    return 0;
 }
 
 zmtp_msg_t *

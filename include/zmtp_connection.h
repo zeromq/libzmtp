@@ -20,7 +20,7 @@ void
 int
     zmtp_connection_negotiate (zmtp_connection_t *self);
 
-void
+int
     zmtp_connection_send (zmtp_connection_t *self, zmtp_msg_t *msg);
 
 zmtp_msg_t *
