@@ -31,7 +31,6 @@
 //  Public API classes
 
 #include "zmtp_msg.h"
-#include "zmtp_connection.h"
 #include "zmtp_dealer.h"
 
 enum zmtp_socket_type {

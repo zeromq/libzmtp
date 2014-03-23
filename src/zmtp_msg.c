@@ -10,7 +10,7 @@
     =========================================================================
 */
 
-#include "../include/zmtp.h"
+#include "zmtp_classes.h"
 
 //  Structure of our class
 
