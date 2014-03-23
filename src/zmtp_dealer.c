@@ -27,7 +27,7 @@ zmtp_dealer_new (int fd)
 {
     zmtp_dealer_t *self = (zmtp_dealer_t *) zmalloc (sizeof *self);
     assert (self);              //  For now, memory exhaustion is fatal
-    
+
     self->connection = zmtp_connection_new (fd, ZMTP_DEALER);
     if (zmtp_connection_negotiate (self->connection) == -1) {
         zmtp_connection_destroy (&self->connection);
@@ -56,7 +56,7 @@ zmtp_dealer_destroy (zmtp_dealer_t **self_p)
 
 
 //  --------------------------------------------------------------------------
-//  
+//
 
 zmtp_dealer_t *
 zmtp_dealer_ipc_connect (const char *path)
