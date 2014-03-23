@@ -6,12 +6,12 @@ pkgconfig_DATA = libzmtp.pc
 include_HEADERS = \
     ../include/zmtp.h \
     ../include/zmtp_msg.h \
-    ../include/zmtp_connection.h \
     ../include/zmtp_dealer.h
 
 libzmtp_la_SOURCES = \
     platform.h \
     zmtp_msg.c \
+    zmtp_connection.h \
     zmtp_connection.c \
     zmtp_dealer.c
 

@@ -10,7 +10,7 @@
     =========================================================================
 */
 
-#include "../include/zmtp.h"
+#include "zmtp_classes.h"
 
 //  ZMTP greeting (64 bytes)
 
