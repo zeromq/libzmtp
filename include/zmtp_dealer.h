@@ -1,7 +1,7 @@
 /*  =========================================================================
     zmtp_dealer - DEALER socket class
 
-    Copyright contributors as noted in the AUTHORS file.
+    Copyright (c) contributors as noted in the AUTHORS file.
     This file is part of libzmtp, the C ZMTP stack.
 
     This Source Code Form is subject to the terms of the Mozilla Public
@@ -13,12 +13,16 @@
 #ifndef __ZMTP_DEALER_H_INCLUDED__
 #define __ZMTP_DEALER_H_INCLUDED__
 
-typedef struct zmtp_dealer zmtp_dealer_t;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+//  Opaque class structure
+typedef struct _zmtp_dealer_t zmtp_dealer_t;
+
+//  @interface
+//  Constructor; takes ownership of data and frees it when destroying the
+//  message. Nullifies the data reference.
 zmtp_dealer_t *
     zmtp_dealer_new (int fd);
 
@@ -36,6 +40,11 @@ int
 
 zmtp_msg_t *
     zmtp_dealer_recv (zmtp_dealer_t *self);
+
+//  Self test of this class
+void
+    zmtp_dealer_test (bool verbose);
+//  @end
 
 #ifdef __cplusplus
 }

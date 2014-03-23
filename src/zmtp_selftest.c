@@ -1,7 +1,7 @@
 /*  =========================================================================
     zmtp_selftest - run self tests
 
-    Copyright contributors as noted in the AUTHORS file.
+    Copyright (c) contributors as noted in the AUTHORS file.
     This file is part of libzmtp, the C ZMTP stack.
 
     This Source Code Form is subject to the terms of the Mozilla Public
