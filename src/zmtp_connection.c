@@ -26,7 +26,6 @@ struct zmtp_greeting {
 
 struct _zmtp_connection_t {
     int fd;             //  BSD socket handle
-    int socktype;       //  0MQ socket type
 };
 
 static void
@@ -36,22 +35,20 @@ static void
 
 
 //  --------------------------------------------------------------------------
-//  Constructor; takes ownership of fd and closes it automatically when
-//  destroying this object.
+//  Constructor
 
 zmtp_connection_t *
-zmtp_connection_new (int fd, int socktype)
+zmtp_connection_new ()
 {
     zmtp_connection_t *self = (zmtp_connection_t *) zmalloc (sizeof *self);
     assert (self);              //  For now, memory exhaustion is fatal
-    self->fd = fd;
-    self->socktype = socktype;
+    self->fd = -1;
     return self;
 }
 
 
 //  --------------------------------------------------------------------------
-//  Destructor; closes fd passed to constructor
+//  Destructor; closes fd if connected
 
 void
 zmtp_connection_destroy (zmtp_connection_t **self_p)
@@ -59,9 +56,85 @@ zmtp_connection_destroy (zmtp_connection_t **self_p)
     assert (self_p);
     if (*self_p) {
         zmtp_connection_t *self = *self_p;
-        close (self->fd);
+        if (self->fd != -1)
+            close (self->fd);
         free (self);
         *self_p = NULL;
+    }
+}
+
+
+//  --------------------------------------------------------------------------
+//
+
+int
+zmtp_connection_ipc_connect (zmtp_connection_t *self, const char *path)
+{
+    assert (self);
+
+    if (self->fd != -1)
+        return -1;
+    struct sockaddr_un remote = { .sun_family = AF_UNIX };
+    if (strlen (path) >= sizeof remote.sun_path)
+        return -1;
+    strcpy (remote.sun_path, path);
+    //  Create socket
+    const int s = socket (AF_UNIX, SOCK_STREAM, 0);
+    if (s == -1)
+        return -1;
+    //  Connect the socket
+    const int rc =
+        connect (s, (const struct sockaddr *) &remote, sizeof remote);
+    if (rc == -1) {
+        close (s);
+        return -1;
+    }
+    else {
+        self->fd = s;
+        return 0;
+    }
+}
+
+
+//  --------------------------------------------------------------------------
+//
+
+int
+zmtp_connection_tcp_connect (zmtp_connection_t *self,
+                             const char *addr, unsigned short port)
+{
+    assert (self);
+
+    if (self->fd != -1)
+        return -1;
+    //  Create socket
+    const int s = socket (AF_INET, SOCK_STREAM, 0);
+    if (s == -1)
+        return -1;
+    //  Resolve address
+    const struct addrinfo hints = {
+        .ai_family   = AF_INET,
+        .ai_socktype = SOCK_STREAM,
+        .ai_flags    = AI_NUMERICHOST | AI_NUMERICSERV
+    };
+    char service [8 + 1];
+    snprintf (service, sizeof service, "%u", port);
+    struct addrinfo *result = NULL;
+    if (getaddrinfo (addr, service, &hints, &result)) {
+        close (s);
+        return -1;
+    }
+    assert (result);
+    //  Create socket
+    const int rc = connect (s, result->ai_addr, result->ai_addrlen);
+    freeaddrinfo (result);
+    if (rc == -1) {
+        close (s);
+        return -1;
+    }
+    else {
+        self->fd = s;
+        return 0;
     }
 }
 
@@ -72,7 +145,7 @@ zmtp_connection_destroy (zmtp_connection_t **self_p)
 //  TODO: test sending random/wrong data to this handler.
 
 int
-zmtp_connection_negotiate (zmtp_connection_t *self)
+zmtp_connection_negotiate (zmtp_connection_t *self, int socktype)
 {
     //  This is our greeting (64 octets)
     const struct zmtp_greeting outgoing = {

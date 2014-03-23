@@ -23,17 +23,12 @@ struct _zmtp_dealer_t {
 //  Constructor
 
 zmtp_dealer_t *
-zmtp_dealer_new (int fd)
+zmtp_dealer_new ()
 {
     zmtp_dealer_t *self = (zmtp_dealer_t *) zmalloc (sizeof *self);
     assert (self);              //  For now, memory exhaustion is fatal
 
-    self->connection = zmtp_connection_new (fd, ZMTP_DEALER);
-    if (zmtp_connection_negotiate (self->connection) == -1) {
-        zmtp_connection_destroy (&self->connection);
-        free (self);
-        return NULL;
-    }
+    self->connection = NULL;
     return self;
 }
 
@@ -58,71 +53,53 @@ zmtp_dealer_destroy (zmtp_dealer_t **self_p)
 //  --------------------------------------------------------------------------
 //
 
-zmtp_dealer_t *
-zmtp_dealer_ipc_connect (const char *path)
+int
+zmtp_dealer_ipc_connect (zmtp_dealer_t *self, const char *path)
 {
-    struct sockaddr_un remote = { .sun_family = AF_UNIX };
-    if (strlen (path) >= sizeof remote.sun_path)
-        return NULL;
-    strcpy (remote.sun_path, path);
-    //  Create socket
-    const int s = socket (AF_UNIX, SOCK_STREAM, 0);
-    if (s == -1)
-        return NULL;
-    //  Connect the socket
-    const int rc =
-        connect (s, (const struct sockaddr *) &remote, sizeof remote);
-    if (rc == -1) {
-        close (s);
-        return NULL;
+    assert (self);
+
+    if (self->connection)
+        return -1;
+    zmtp_connection_t *conn = zmtp_connection_new ();
+    if (!conn)
+        return -1;
+    if (zmtp_connection_ipc_connect (conn, path) == -1) {
+        zmtp_connection_destroy (&conn);
+        return -1;
     }
-    else {
-        zmtp_dealer_t *self = zmtp_dealer_new (s);
-        if (!self)
-            close (s);
-        return self;
+    if (zmtp_connection_negotiate (conn, ZMTP_DEALER) == -1) {
+        zmtp_connection_destroy (&conn);
+        return -1;
     }
+    self->connection = conn;
+    return 0;
 }
 
 
 //  --------------------------------------------------------------------------
 //
 
-zmtp_dealer_t *
-zmtp_dealer_tcp_connect (const char *addr, unsigned short port)
+int
+zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
+                         const char *addr, unsigned short port)
 {
-    char service [8 + 1];
-    snprintf (service, sizeof service, "%u", port);
+    assert (self);
 
-    //  Create socket
-    const int s = socket (AF_INET, SOCK_STREAM, 0);
-    if (s == -1)
-        return NULL;
-    //  Resolve address
-    const struct addrinfo hints = {
-        .ai_family   = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-        .ai_flags    = AI_NUMERICHOST | AI_NUMERICSERV
-    };
-    struct addrinfo *result = NULL;
-    if (getaddrinfo (addr, service, &hints, &result)) {
-        close (s);
-        return NULL;
+    if (self->connection)
+        return -1;
+    zmtp_connection_t *conn = zmtp_connection_new ();
+    if (!conn)
+        return -1;
+    if (zmtp_connection_tcp_connect (conn, addr, port) == -1) {
+        zmtp_connection_destroy (&conn);
+        return -1;
     }
-    assert (result);
-    //  Create socket
-    const int rc = connect (s, result->ai_addr, result->ai_addrlen);
-    freeaddrinfo (result);
-    if (rc == -1) {
-        close (s);
-        return NULL;
+    if (zmtp_connection_negotiate (conn, ZMTP_DEALER) == -1) {
+        zmtp_connection_destroy (&conn);
+        return -1;
     }
-    else {
-        zmtp_dealer_t *self = zmtp_dealer_new (s);
-        if (!self)
-            close (s);
-        return self;
-    }
+    self->connection = conn;
+    return 0;
 }
 
 
