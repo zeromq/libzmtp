@@ -21,20 +21,28 @@ extern "C" {
 typedef struct _zmtp_connection_t zmtp_connection_t;
 
 //  @interface
-//  Constructor; takes ownership of fd and closes it automatically when
-//  destroying this object.
+//  Constructor
 zmtp_connection_t *
-    zmtp_connection_new (int fd, int socktype);
+    zmtp_connection_new ();
 
-//  Destructor; closes fd passed to constructor
+//  Destructor; closes fd if connected
 void
     zmtp_connection_destroy (zmtp_connection_t **self_p);
+
+//  Connect channel using local transport
+int
+    zmtp_connection_ipc_connect (zmtp_connection_t *self, const char *path);
+
+//  Connect channel using TCP transport.
+int
+    zmtp_connection_tcp_connect (zmtp_connection_t *self,
+                                 const char *addr, unsigned short port);
 
 //  Negotiate a ZMTP connection
 //  This currently does only ZMTP v3, and will reject older protocols.
 //  TODO: test sending random/wrong data to this handler.
 int
-    zmtp_connection_negotiate (zmtp_connection_t *self);
+    zmtp_connection_negotiate (zmtp_connection_t *self, int socktype);
 
 //  Send a ZMTP message to the connection
 int

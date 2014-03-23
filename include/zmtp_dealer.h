@@ -24,16 +24,17 @@ typedef struct _zmtp_dealer_t zmtp_dealer_t;
 //  Constructor; takes ownership of data and frees it when destroying the
 //  message. Nullifies the data reference.
 zmtp_dealer_t *
-    zmtp_dealer_new (int fd);
-
-zmtp_dealer_t *
-    zmtp_dealer_ipc_connect (const char *addr);
-
-zmtp_dealer_t *
-    zmtp_dealer_tcp_connect (const char *addr, unsigned short port);
+    zmtp_dealer_new ();
 
 void
     zmtp_dealer_destroy (zmtp_dealer_t **self_p);
+
+int
+    zmtp_dealer_ipc_connect (zmtp_dealer_t *self, const char *addr);
+
+int
+    zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
+                             const char *addr, unsigned short port);
 
 int
     zmtp_dealer_send (zmtp_dealer_t *self, zmtp_msg_t *msg);
