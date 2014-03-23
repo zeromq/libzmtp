@@ -36,18 +36,19 @@ zmtp_dealer_new (int fd)
 }
 
 zmtp_dealer_t *
-zmtp_dealer_ipc_connect (const char *addr)
+zmtp_dealer_ipc_connect (const char *path)
 {
+    struct sockaddr_un remote = { .sun_family = AF_UNIX };
+    if (strlen (path) >= sizeof remote.sun_path)
+        return NULL;
+    strcpy (remote.sun_path, path);
     //  Create socket
     const int s = socket (AF_UNIX, SOCK_STREAM, 0);
     if (s == -1)
         return NULL;
-    struct sockaddr_un remote =
-        (struct sockaddr_un) { .sun_family = AF_UNIX };
-    strcpy (remote.sun_path, addr);
-    const socklen_t len = strlen (remote.sun_path) + sizeof remote.sun_family;
     //  Connect the socket
-    const int rc = connect (s, (const struct sockaddr *) &remote, len);
+    const int rc =
+        connect (s, (const struct sockaddr *) &remote, sizeof remote);
     if (rc == -1) {
         close (s);
         return NULL;
