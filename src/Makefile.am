@@ -11,8 +11,8 @@ include_HEADERS = \
 libzmtp_la_SOURCES = \
     platform.h \
     zmtp_msg.c \
-    zmtp_connection.h \
-    zmtp_connection.c \
+    zmtp_channel.h \
+    zmtp_channel.c \
     zmtp_dealer.c
 
 AM_CFLAGS = -g
