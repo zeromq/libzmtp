@@ -18,6 +18,6 @@
 #include "../include/zmtp.h"
 
 //  Internal API
-#include "zmtp_connection.h"
+#include "zmtp_channel.h"
 
 #endif

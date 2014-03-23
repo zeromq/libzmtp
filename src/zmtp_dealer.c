@@ -15,7 +15,7 @@
 //  Structure of our class
 
 struct _zmtp_dealer_t {
-    zmtp_connection_t *connection;
+    zmtp_channel_t *channel;
 };
 
 
@@ -28,7 +28,7 @@ zmtp_dealer_new ()
     zmtp_dealer_t *self = (zmtp_dealer_t *) zmalloc (sizeof *self);
     assert (self);              //  For now, memory exhaustion is fatal
 
-    self->connection = NULL;
+    self->channel = NULL;
     return self;
 }
 
@@ -43,7 +43,7 @@ zmtp_dealer_destroy (zmtp_dealer_t **self_p)
 
     if (*self_p) {
         zmtp_dealer_t *self = *self_p;
-        zmtp_connection_destroy (&self->connection);
+        zmtp_channel_destroy (&self->channel);
         free (self);
         *self_p = NULL;
     }
@@ -56,22 +56,22 @@ zmtp_dealer_destroy (zmtp_dealer_t **self_p)
 int
 zmtp_dealer_ipc_connect (zmtp_dealer_t *self, const char *path)
 {
-    assert (self);
-
-    if (self->connection)
+    if (!self)
         return -1;
-    zmtp_connection_t *conn = zmtp_connection_new ();
-    if (!conn)
+    if (self->channel)
         return -1;
-    if (zmtp_connection_ipc_connect (conn, path) == -1) {
-        zmtp_connection_destroy (&conn);
+    zmtp_channel_t *channel = zmtp_channel_new ();
+    if (!channel)
         return -1;
-    }
-    if (zmtp_connection_negotiate (conn, ZMTP_DEALER) == -1) {
-        zmtp_connection_destroy (&conn);
+    if (zmtp_channel_ipc_connect (channel, path) == -1) {
+        zmtp_channel_destroy (&channel);
         return -1;
     }
-    self->connection = conn;
+    if (zmtp_channel_negotiate (channel, ZMTP_DEALER) == -1) {
+        zmtp_channel_destroy (&channel);
+        return -1;
+    }
+    self->channel = channel;
     return 0;
 }
 
@@ -83,22 +83,22 @@ int
 zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
                          const char *addr, unsigned short port)
 {
-    assert (self);
-
-    if (self->connection)
+    if (!self)
         return -1;
-    zmtp_connection_t *conn = zmtp_connection_new ();
-    if (!conn)
+    if (self->channel)
         return -1;
-    if (zmtp_connection_tcp_connect (conn, addr, port) == -1) {
-        zmtp_connection_destroy (&conn);
+    zmtp_channel_t *channel = zmtp_channel_new ();
+    if (!channel)
         return -1;
-    }
-    if (zmtp_connection_negotiate (conn, ZMTP_DEALER) == -1) {
-        zmtp_connection_destroy (&conn);
+    if (zmtp_channel_tcp_connect (channel, addr, port) == -1) {
+        zmtp_channel_destroy (&channel);
         return -1;
     }
-    self->connection = conn;
+    if (zmtp_channel_negotiate (channel, ZMTP_DEALER) == -1) {
+        zmtp_channel_destroy (&channel);
+        return -1;
+    }
+    self->channel = channel;
     return 0;
 }
 
@@ -110,9 +110,9 @@ int
 zmtp_dealer_send (zmtp_dealer_t *self, zmtp_msg_t *msg)
 {
     assert (self);
-    assert (self->connection);
+    assert (self->channel);
 
-    return zmtp_connection_send (self->connection, msg);
+    return zmtp_channel_send (self->channel, msg);
 }
 
 
@@ -123,9 +123,9 @@ zmtp_msg_t *
 zmtp_dealer_recv (zmtp_dealer_t *self)
 {
     assert (self);
-    assert (self->connection);
+    assert (self->channel);
 
-    return zmtp_connection_recv (self->connection);
+    return zmtp_channel_recv (self->channel);
 }
 
 

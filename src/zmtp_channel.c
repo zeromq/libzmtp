@@ -1,5 +1,5 @@
 /*  =========================================================================
-    zmtp_connection - connection class
+    zmtp_channel - channel class
 
     Copyright (c) contributors as noted in the AUTHORS file.
     This file is part of libzmtp, the C ZMTP stack.
@@ -24,7 +24,7 @@ struct zmtp_greeting {
 
 //  Structure of our class
 
-struct _zmtp_connection_t {
+struct _zmtp_channel_t {
     int fd;             //  BSD socket handle
 };
 
@@ -37,10 +37,10 @@ static void
 //  --------------------------------------------------------------------------
 //  Constructor
 
-zmtp_connection_t *
-zmtp_connection_new ()
+zmtp_channel_t *
+zmtp_channel_new ()
 {
-    zmtp_connection_t *self = (zmtp_connection_t *) zmalloc (sizeof *self);
+    zmtp_channel_t *self = (zmtp_channel_t *) zmalloc (sizeof *self);
     assert (self);              //  For now, memory exhaustion is fatal
     self->fd = -1;
     return self;
@@ -51,11 +51,11 @@ zmtp_connection_new ()
 //  Destructor; closes fd if connected
 
 void
-zmtp_connection_destroy (zmtp_connection_t **self_p)
+zmtp_channel_destroy (zmtp_channel_t **self_p)
 {
     assert (self_p);
     if (*self_p) {
-        zmtp_connection_t *self = *self_p;
+        zmtp_channel_t *self = *self_p;
         if (self->fd != -1)
             close (self->fd);
         free (self);
@@ -65,10 +65,10 @@ zmtp_connection_destroy (zmtp_connection_t **self_p)
 
 
 //  --------------------------------------------------------------------------
-//
+//  Connect channel to local endpoint
 
 int
-zmtp_connection_ipc_connect (zmtp_connection_t *self, const char *path)
+zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
 {
     assert (self);
 
@@ -97,11 +97,11 @@ zmtp_connection_ipc_connect (zmtp_connection_t *self, const char *path)
 
 
 //  --------------------------------------------------------------------------
-//
+//  Connect channel to TCP endpoint
 
 int
-zmtp_connection_tcp_connect (zmtp_connection_t *self,
-                             const char *addr, unsigned short port)
+zmtp_channel_tcp_connect (zmtp_channel_t *self,
+                          const char *addr, unsigned short port)
 {
     assert (self);
 
@@ -140,12 +140,12 @@ zmtp_connection_tcp_connect (zmtp_connection_t *self,
 
 
 //  --------------------------------------------------------------------------
-//  Negotiate a ZMTP connection
+//  Negotiate a ZMTP channel
 //  This currently does only ZMTP v3, and will reject older protocols.
 //  TODO: test sending random/wrong data to this handler.
 
 int
-zmtp_connection_negotiate (zmtp_connection_t *self, int socktype)
+zmtp_channel_negotiate (zmtp_channel_t *self, int socktype)
 {
     //  This is our greeting (64 octets)
     const struct zmtp_greeting outgoing = {
@@ -185,11 +185,11 @@ zmtp_connection_negotiate (zmtp_connection_t *self, int socktype)
 
     //  Send READY command
     zmtp_msg_t *ready = zmtp_msg_new_const (0x04, "READY   ", 8);
-    zmtp_connection_send (self, ready);
+    zmtp_channel_send (self, ready);
     zmtp_msg_destroy (&ready);
 
     //  Receive READY command
-    ready = zmtp_connection_recv (self);
+    ready = zmtp_channel_recv (self);
     assert ((zmtp_msg_flags (ready) & 0x04) == 0x04);
     zmtp_msg_destroy (&ready);
 
@@ -198,10 +198,10 @@ zmtp_connection_negotiate (zmtp_connection_t *self, int socktype)
 
 
 //  --------------------------------------------------------------------------
-//  Send a ZMTP message to the connection
+//  Send a ZMTP message to the channel
 
 int
-zmtp_connection_send (zmtp_connection_t *self, zmtp_msg_t *msg)
+zmtp_channel_send (zmtp_channel_t *self, zmtp_msg_t *msg)
 {
     assert (self);
     assert (msg);
@@ -232,12 +232,11 @@ zmtp_connection_send (zmtp_connection_t *self, zmtp_msg_t *msg)
 
 
 //  --------------------------------------------------------------------------
-//  Receive a ZMTP message off the connection
+//  Receive a ZMTP message off the channel
 
 zmtp_msg_t *
-zmtp_connection_recv (zmtp_connection_t *self)
+zmtp_channel_recv (zmtp_channel_t *self)
 {
-    assert (self);
     assert (self);
 
     byte flags, first_byte;
@@ -295,9 +294,9 @@ s_tcp_recv (int fd, void *buffer, size_t len)
 //  Selftest
 
 void
-zmtp_connection_test (bool verbose)
+zmtp_channel_test (bool verbose)
 {
-    printf (" * zmtp_connection: ");
+    printf (" * zmtp_channel: ");
     //  @selftest
     //  @end
     printf ("OK\n");
