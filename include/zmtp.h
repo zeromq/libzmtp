@@ -1,5 +1,21 @@
+/*  =========================================================================
+    zmtp - public API
+
+    Copyright (c) contributors as noted in the AUTHORS file.
+    This file is part of libzmtp, the C ZMTP stack.
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    =========================================================================
+*/
+
 #ifndef __ZMTP_H_INCLUDED__
 #define __ZMTP_H_INCLUDED__
+
+//  Set up environment for the application
+
+#include "zmtp_prelude.h"
 
 //  ZMTP version macros for compile-time API detection
 
@@ -12,21 +28,7 @@
 #define ZMTP_VERSION \
     ZMTP_MAKE_VERSION(ZMTP_VERSION_MAJOR, ZMTP_VERSION_MINOR, ZMTP_VERSION_PATCH)
 
-#include <assert.h>
-#include <stddef.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <netdb.h>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-
-typedef unsigned char byte;
+//  Public API classes
 
 #include "zmtp_msg.h"
 #include "zmtp_connection.h"
