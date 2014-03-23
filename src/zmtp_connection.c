@@ -82,39 +82,39 @@ zmtp_connection_negotiate (zmtp_connection_t *self)
     };
     //  Send protocol signature
     s_tcp_send (self->fd, outgoing.signature, sizeof outgoing.signature);
-    
+
     //  Read the first byte.
     struct zmtp_greeting incoming;
     s_tcp_recv (self->fd, incoming.signature, 1);
     assert (incoming.signature [0] == 0xff);
-    
+
     //  Read the rest of signature
     s_tcp_recv (self->fd, incoming.signature + 1, 9);
     assert ((incoming.signature [9] & 1) == 1);
-    
+
     //  Exchange major version numbers
     s_tcp_send (self->fd, outgoing.version, 1);
     s_tcp_recv (self->fd, incoming.version, 1);
 
     assert (incoming.version [0] == 3);
-    
+
     //  Send the rest of greeting to the peer.
     s_tcp_send (self->fd, outgoing.version + 1, 1);
     s_tcp_send (self->fd, outgoing.mechanism, sizeof outgoing.mechanism);
     s_tcp_send (self->fd, outgoing.as_server, sizeof outgoing.as_server);
     s_tcp_send (self->fd, outgoing.filler, sizeof outgoing.filler);
-    
+
     //  Receive the rest of greeting from the peer.
     s_tcp_recv (self->fd, incoming.version + 1, 1);
     s_tcp_recv (self->fd, incoming.mechanism, sizeof incoming.mechanism);
     s_tcp_recv (self->fd, incoming.as_server, sizeof incoming.as_server);
     s_tcp_recv (self->fd, incoming.filler, sizeof incoming.filler);
-    
+
     //  Send READY command
     zmtp_msg_t *ready = zmtp_msg_new_const (0x04, "READY   ", 8);
     zmtp_connection_send (self, ready);
     zmtp_msg_destroy (&ready);
-    
+
     //  Receive READY command
     ready = zmtp_connection_recv (self);
     assert ((zmtp_msg_flags (ready) & 0x04) == 0x04);
