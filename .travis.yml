@@ -1,0 +1,7 @@
+language: c
+
+#   Install dependencies first
+before_script:
+
+#   Build and check this project
+script: ./autogen.sh && ./configure && make check
