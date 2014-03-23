@@ -33,10 +33,6 @@ static void
     s_tcp_send (int fd, const void *data, size_t len);
 static void
     s_tcp_recv (int fd, void *buffer, size_t len);
-static void
-    s_send_msg (zmtp_connection_t *self, zmtp_msg_t *msg);
-static zmtp_msg_t *
-    s_recv_msg (zmtp_connection_t *self);
 
 
 //  --------------------------------------------------------------------------
@@ -116,12 +112,11 @@ zmtp_connection_negotiate (zmtp_connection_t *self)
     
     //  Send READY command
     zmtp_msg_t *ready = zmtp_msg_new_const (0x04, "READY   ", 8);
-    assert (ready);
-    s_send_msg (self, ready);
+    zmtp_connection_send (self, ready);
     zmtp_msg_destroy (&ready);
     
     //  Receive READY command
-    ready = s_recv_msg (self);
+    ready = zmtp_connection_recv (self);
     assert ((zmtp_msg_flags (ready) & 0x04) == 0x04);
     zmtp_msg_destroy (&ready);
 
@@ -134,39 +129,6 @@ zmtp_connection_negotiate (zmtp_connection_t *self)
 
 int
 zmtp_connection_send (zmtp_connection_t *self, zmtp_msg_t *msg)
-{
-    assert (self);
-    assert (msg);
-
-    s_send_msg (self, msg);
-    return 0;
-}
-
-
-//  --------------------------------------------------------------------------
-//  Receive a ZMTP message off the connection
-
-zmtp_msg_t *
-zmtp_connection_recv (zmtp_connection_t *self)
-{
-    assert (self);
-    return s_recv_msg (self);
-}
-
-
-//  --------------------------------------------------------------------------
-//  Lower-level TCP and ZMTP message I/O functions
-
-static void
-s_tcp_send (int fd, const void *data, size_t len)
-{
-    const ssize_t rc = send (fd, data, len, 0);
-    assert (rc == len);
-    assert (rc != -1);
-}
-
-static void
-s_send_msg (zmtp_connection_t *self, zmtp_msg_t *msg)
 {
     assert (self);
     assert (msg);
@@ -192,24 +154,17 @@ s_send_msg (zmtp_connection_t *self, zmtp_msg_t *msg)
         s_tcp_send (self->fd, buffer, sizeof buffer);
     }
     s_tcp_send (self->fd, zmtp_msg_data (msg), zmtp_msg_size (msg));
+    return 0;
 }
 
-static void
-s_tcp_recv (int fd, void *buffer, size_t len)
-{
-    size_t bytes_read = 0;
-    while (bytes_read < len) {
-        const ssize_t n = read (
-            fd, (char *) buffer + bytes_read, len - bytes_read);
-        assert (n != 0);
-        assert (n != -1);
-        bytes_read += n;
-    }
-}
 
-static zmtp_msg_t *
-s_recv_msg (zmtp_connection_t *self)
+//  --------------------------------------------------------------------------
+//  Receive a ZMTP message off the connection
+
+zmtp_msg_t *
+zmtp_connection_recv (zmtp_connection_t *self)
 {
+    assert (self);
     assert (self);
 
     byte flags, first_byte;
@@ -235,6 +190,31 @@ s_recv_msg (zmtp_connection_t *self)
     assert (data);
     s_tcp_recv (self->fd, data, size);
     return zmtp_msg_new (flags, &data, size);
+}
+
+
+//  --------------------------------------------------------------------------
+//  Lower-level TCP and ZMTP message I/O functions
+
+static void
+s_tcp_send (int fd, const void *data, size_t len)
+{
+    const ssize_t rc = send (fd, data, len, 0);
+    assert (rc == len);
+    assert (rc != -1);
+}
+
+static void
+s_tcp_recv (int fd, void *buffer, size_t len)
+{
+    size_t bytes_read = 0;
+    while (bytes_read < len) {
+        const ssize_t n = read (
+            fd, (char *) buffer + bytes_read, len - bytes_read);
+        assert (n != 0);
+        assert (n != -1);
+        bytes_read += n;
+    }
 }
 
 
