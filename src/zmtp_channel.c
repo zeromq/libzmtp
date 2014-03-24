@@ -28,6 +28,8 @@ struct _zmtp_channel_t {
     int fd;             //  BSD socket handle
 };
 
+static int
+    s_negotiate (zmtp_channel_t *self);
 static void
     s_tcp_send (int fd, const void *data, size_t len);
 static void
@@ -85,14 +87,12 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
     //  Connect the socket
     const int rc =
         connect (s, (const struct sockaddr *) &remote, sizeof remote);
-    if (rc == -1) {
+    if (rc == -1 || s_negotiate (self) == -1) {
         close (s);
         return -1;
     }
-    else {
-        self->fd = s;
-        return 0;
-    }
+    self->fd = s;
+    return 0;
 }
 
 
@@ -128,14 +128,12 @@ zmtp_channel_tcp_connect (zmtp_channel_t *self,
     //  Create socket
     const int rc = connect (s, result->ai_addr, result->ai_addrlen);
     freeaddrinfo (result);
-    if (rc == -1) {
+    if (rc == -1 || s_negotiate (self) == -1) {
         close (s);
         return -1;
     }
-    else {
-        self->fd = s;
-        return 0;
-    }
+    self->fd = s;
+    return 0;
 }
 
 
@@ -144,8 +142,8 @@ zmtp_channel_tcp_connect (zmtp_channel_t *self,
 //  This currently does only ZMTP v3, and will reject older protocols.
 //  TODO: test sending random/wrong data to this handler.
 
-int
-zmtp_channel_negotiate (zmtp_channel_t *self, int socktype)
+static int
+s_negotiate (zmtp_channel_t *self)
 {
     //  This is our greeting (64 octets)
     const struct zmtp_greeting outgoing = {
