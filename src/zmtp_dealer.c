@@ -15,7 +15,7 @@
 //  Structure of our class
 
 struct _zmtp_dealer_t {
-    zmtp_channel_t *channel;
+    zmtp_channel_t *channel;    //  At most one channel per socket now
 };
 
 
@@ -58,7 +58,7 @@ zmtp_dealer_ipc_connect (zmtp_dealer_t *self, const char *path)
 {
     if (!self)
         return -1;
-    if (self->channel)
+    if (self->channel)  //  At most one channel per socket now
         return -1;
     zmtp_channel_t *channel = zmtp_channel_new ();
     if (!channel)
@@ -81,7 +81,7 @@ zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
 {
     if (!self)
         return -1;
-    if (self->channel)
+    if (self->channel)  //  At most one channel per socket now
         return -1;
     zmtp_channel_t *channel = zmtp_channel_new ();
     if (!channel)
@@ -96,27 +96,29 @@ zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
 
 
 //  --------------------------------------------------------------------------
-//
+//  Send a message on a socket
 
 int
 zmtp_dealer_send (zmtp_dealer_t *self, zmtp_msg_t *msg)
 {
-    assert (self);
-    assert (self->channel);
-
+    if (!self)
+        return -1;
+    if (!self->channel)
+        return -1;
     return zmtp_channel_send (self->channel, msg);
 }
 
 
 //  --------------------------------------------------------------------------
-//
+//  Receive a message from a socket
 
 zmtp_msg_t *
 zmtp_dealer_recv (zmtp_dealer_t *self)
 {
-    assert (self);
-    assert (self->channel);
-
+    if (!self)
+        return NULL;
+    if (!self->channel)
+        return NULL;
     return zmtp_channel_recv (self->channel);
 }
 
