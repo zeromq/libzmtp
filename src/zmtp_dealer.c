@@ -67,10 +67,6 @@ zmtp_dealer_ipc_connect (zmtp_dealer_t *self, const char *path)
         zmtp_channel_destroy (&channel);
         return -1;
     }
-    if (zmtp_channel_negotiate (channel, ZMTP_DEALER) == -1) {
-        zmtp_channel_destroy (&channel);
-        return -1;
-    }
     self->channel = channel;
     return 0;
 }
@@ -91,10 +87,6 @@ zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
     if (!channel)
         return -1;
     if (zmtp_channel_tcp_connect (channel, addr, port) == -1) {
-        zmtp_channel_destroy (&channel);
-        return -1;
-    }
-    if (zmtp_channel_negotiate (channel, ZMTP_DEALER) == -1) {
         zmtp_channel_destroy (&channel);
         return -1;
     }

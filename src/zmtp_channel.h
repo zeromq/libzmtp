@@ -38,12 +38,6 @@ int
     zmtp_channel_tcp_connect (zmtp_channel_t *self,
                               const char *addr, unsigned short port);
 
-//  Negotiate a ZMTP connection
-//  This currently does only ZMTP v3, and will reject older protocols.
-//  TODO: test sending random/wrong data to this handler.
-int
-    zmtp_channel_negotiate (zmtp_channel_t *self, int socktype);
-
 //  Send a ZMTP message to the channel
 int
     zmtp_channel_send (zmtp_channel_t *self, zmtp_msg_t *msg);
