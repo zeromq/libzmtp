@@ -204,24 +204,26 @@ zmtp_channel_send (zmtp_channel_t *self, zmtp_msg_t *msg)
     assert (self);
     assert (msg);
 
-    const byte flags = zmtp_msg_flags (msg);
-    s_tcp_send (self->fd, &flags, sizeof flags);
-    if (zmtp_msg_size (msg) < 255) {
+    byte frame_flags = zmtp_msg_flags (msg) & 0x04;
+    if (zmtp_msg_size (msg) > 255)
+        frame_flags |= 0x02;
+    s_tcp_send (self->fd, &frame_flags, sizeof frame_flags);
+
+    if (zmtp_msg_size (msg) <= 255) {
         const byte msg_size = zmtp_msg_size (msg);
         s_tcp_send (self->fd, &msg_size, sizeof msg_size);
     }
     else {
-        byte buffer [9];
+        byte buffer [8];
         const uint64_t msg_size = (uint64_t) zmtp_msg_size (msg);
-        buffer [0] = 0xff;
-        buffer [1] = msg_size >> 56;
-        buffer [2] = msg_size >> 48;
-        buffer [3] = msg_size >> 40;
-        buffer [4] = msg_size >> 32;
-        buffer [5] = msg_size >> 24;
-        buffer [6] = msg_size >> 16;
-        buffer [7] = msg_size >> 8;
-        buffer [8] = msg_size;
+        buffer [0] = msg_size >> 56;
+        buffer [1] = msg_size >> 48;
+        buffer [2] = msg_size >> 40;
+        buffer [3] = msg_size >> 32;
+        buffer [4] = msg_size >> 24;
+        buffer [5] = msg_size >> 16;
+        buffer [6] = msg_size >> 8;
+        buffer [7] = msg_size;
         s_tcp_send (self->fd, buffer, sizeof buffer);
     }
     s_tcp_send (self->fd, zmtp_msg_data (msg), zmtp_msg_size (msg));
@@ -237,13 +239,16 @@ zmtp_channel_recv (zmtp_channel_t *self)
 {
     assert (self);
 
-    byte flags, first_byte;
+    byte frame_flags;
     size_t size;
 
-    s_tcp_recv (self->fd, &flags, 1);
-    s_tcp_recv (self->fd, &first_byte, 1);
-    if (first_byte != 255)
-        size = (size_t) first_byte;
+    s_tcp_recv (self->fd, &frame_flags, 1);
+    //  Check large flag
+    if ((frame_flags & 0x02) == 0) {
+        byte buffer [1];
+        s_tcp_recv (self->fd, buffer, 1);
+        size = (size_t) buffer [0];
+    }
     else {
         byte buffer [8];
         s_tcp_recv (self->fd, buffer, sizeof buffer);
@@ -259,7 +264,7 @@ zmtp_channel_recv (zmtp_channel_t *self)
     byte *data = zmalloc (size);
     assert (data);
     s_tcp_recv (self->fd, data, size);
-    return zmtp_msg_new (flags, &data, size);
+    return zmtp_msg_new (frame_flags & 0x04, &data, size);
 }
 
 
