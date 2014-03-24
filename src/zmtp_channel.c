@@ -87,11 +87,16 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
     //  Connect the socket
     const int rc =
         connect (s, (const struct sockaddr *) &remote, sizeof remote);
-    if (rc == -1 || s_negotiate (self) == -1) {
+    if (rc == -1) {
         close (s);
         return -1;
     }
     self->fd = s;
+    if (s_negotiate (self) == -1) {
+        close (self->fd);
+        self->fd = -1;
+        return -1;
+    }
     return 0;
 }
 
@@ -128,11 +133,16 @@ zmtp_channel_tcp_connect (zmtp_channel_t *self,
     //  Create socket
     const int rc = connect (s, result->ai_addr, result->ai_addrlen);
     freeaddrinfo (result);
-    if (rc == -1 || s_negotiate (self) == -1) {
+    if (rc == -1) {
         close (s);
         return -1;
     }
     self->fd = s;
+    if (s_negotiate (self) == -1) {
+        close (self->fd);
+        self->fd = -1;
+        return -1;
+    }
     return 0;
 }
 
@@ -182,7 +192,7 @@ s_negotiate (zmtp_channel_t *self)
     s_tcp_recv (self->fd, incoming.filler, sizeof incoming.filler);
 
     //  Send READY command
-    zmtp_msg_t *ready = zmtp_msg_new_const (0x04, "READY   ", 8);
+    zmtp_msg_t *ready = zmtp_msg_new_const (0x04, "\5READY", 6);
     zmtp_channel_send (self, ready);
     zmtp_msg_destroy (&ready);
 
@@ -252,14 +262,14 @@ zmtp_channel_recv (zmtp_channel_t *self)
     else {
         byte buffer [8];
         s_tcp_recv (self->fd, buffer, sizeof buffer);
-        size = (uint64_t) buffer [7] << 56 |
-               (uint64_t) buffer [6] << 48 |
-               (uint64_t) buffer [5] << 40 |
-               (uint64_t) buffer [4] << 32 |
-               (uint64_t) buffer [3] << 24 |
-               (uint64_t) buffer [2] << 16 |
-               (uint64_t) buffer [1] << 8  |
-               (uint64_t) buffer [0];
+        size = (uint64_t) buffer [0] << 56 |
+               (uint64_t) buffer [1] << 48 |
+               (uint64_t) buffer [2] << 40 |
+               (uint64_t) buffer [3] << 32 |
+               (uint64_t) buffer [4] << 24 |
+               (uint64_t) buffer [5] << 16 |
+               (uint64_t) buffer [6] << 8  |
+               (uint64_t) buffer [7];
     }
     byte *data = zmalloc (size);
     assert (data);
