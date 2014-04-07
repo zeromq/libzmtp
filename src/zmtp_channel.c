@@ -318,10 +318,16 @@ zmtp_channel_recv (zmtp_channel_t *self)
 static int
 s_tcp_send (int fd, const void *data, size_t len)
 {
-    const ssize_t rc = send (fd, data, len, 0);
-    if (rc == -1)
-        return -1;
-    assert (rc == len);
+    size_t bytes_sent = 0;
+    while (bytes_sent < len) {
+        const ssize_t rc = send (
+            fd, (char *) data + bytes_sent, len - bytes_sent, 0);
+        if (rc == -1 && errno == EINTR)
+            continue;
+        if (rc == -1)
+            return -1;
+        bytes_sent += rc;
+    }
     return 0;
 }
 
@@ -332,6 +338,8 @@ s_tcp_recv (int fd, void *buffer, size_t len)
     while (bytes_read < len) {
         const ssize_t n = recv (
             fd, (char *) buffer + bytes_read, len - bytes_read, 0);
+        if (n == -1 && errno == EINTR)
+            continue;
         if (n == -1 || n == 0)
             return -1;
         bytes_read += n;
