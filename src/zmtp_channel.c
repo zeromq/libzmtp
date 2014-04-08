@@ -347,6 +347,69 @@ s_tcp_recv (int fd, void *buffer, size_t len)
     return 0;
 }
 
+#include <poll.h>
+
+//  Simple TCP echo server. It listens on a TCP port and after
+//  accepting a new connection, echoes all received data.
+//  This is to test the encodining/decoding compatibility.
+
+struct echo_serv_t {
+    unsigned short port;
+};
+
+static void *
+s_echo_serv (void *arg)
+{
+    struct echo_serv_t *params = (struct echo_serv_t *) arg;
+
+    //  Create socket
+    const int s = socket (AF_INET, SOCK_STREAM, 0);
+    assert (s != -1);
+    //  Allow port reuse
+    const int on = 1;
+    int rc = setsockopt (s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on);
+    assert (rc == 0);
+    //  Fill address
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons (params->port);
+    server_addr.sin_addr.s_addr = htonl (INADDR_ANY);
+    //  Bind socket
+    rc = bind (s, (struct sockaddr *) &server_addr, sizeof server_addr);
+    assert (rc == 0);
+    //  Listen for connections
+    rc = listen (s, 1);
+    assert (rc != -1);
+    //  Accept connection
+    int fd = accept (s, NULL, NULL);
+    assert (fd != -1);
+    //  Set non-blocking mode
+    const int flags = fcntl (fd, F_GETFL, 0);
+    assert (flags != -1);
+    rc = fcntl (fd, F_SETFL, flags | O_NONBLOCK);
+    assert (rc == 0);
+    unsigned char buf [80];
+    //  Echo all received data
+    while (1) {
+        struct pollfd pollfd;
+        pollfd.fd = fd;
+        pollfd.events = POLLIN;
+        rc = poll (&pollfd, 1, -1);
+        assert (rc == 1);
+        rc = read (fd, buf, sizeof buf);
+        if (rc == 0)
+            break;
+        assert (rc > 0 || errno == EINTR);
+        if (rc > 0) {
+            rc = s_tcp_send (fd, buf, rc);
+            assert (rc == 0);
+        }
+    }
+    close (fd);
+    close (s);
+    return NULL;
+}
+
 
 //  --------------------------------------------------------------------------
 //  Selftest
@@ -356,6 +419,36 @@ zmtp_channel_test (bool verbose)
 {
     printf (" * zmtp_channel: ");
     //  @selftest
+    pthread_t thread;
+    struct echo_serv_t echo_serv_params = { .port = 22001 };
+    pthread_create (&thread, NULL, s_echo_serv, &echo_serv_params);
+    sleep (1);
+    zmtp_channel_t *channel = zmtp_channel_new ();
+    assert (channel);
+    int rc = zmtp_channel_tcp_connect (channel, "127.0.0.1", 22001);
+    assert (rc == 0);
+    char *test_strings [] = {
+        "1",
+        "22",
+        "333",
+        "4444",
+        "55555"};
+    for (int i = 0; i < 5; i++) {
+        zmtp_msg_t *msg = zmtp_msg_new_const (
+            0, test_strings [i], strlen (test_strings [i]));
+        assert (msg);
+        rc = zmtp_channel_send (channel, msg);
+        assert (rc == 0);
+        zmtp_msg_t *msg2 = zmtp_channel_recv (channel);
+        assert (msg2 != NULL);
+        assert (zmtp_msg_size (msg) == zmtp_msg_size (msg2));
+        assert (memcmp (zmtp_msg_data (msg),
+            zmtp_msg_data (msg2), zmtp_msg_size (msg)) == 0);
+        zmtp_msg_destroy (&msg);
+        zmtp_msg_destroy (&msg2);
+    }
+    zmtp_channel_destroy (&channel);
+    pthread_join (thread, NULL);
     //  @end
     printf ("OK\n");
 }
