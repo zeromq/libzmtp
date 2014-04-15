@@ -21,4 +21,5 @@ bin_PROGRAMS = libzmtp_selftest
 libzmtp_selftest_LDADD = libzmtp.la
 libzmtp_selftest_SOURCES = zmtp_selftest.c
 libzmtp_la_LDFLAGS = -version-info @LTVER@
-TESTS = zmtp_selftest
+
+TESTS = libzmtp_selftest
