@@ -154,6 +154,8 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS(errno.h arpa/inet.h netinet/tcp.h netinet/in.h stddef.h \
 stdlib.h string.h sys/socket.h sys/time.h unistd.h limits.h ifaddrs.h)
 
+AC_SEARCH_LIBS([pthread_create], [pthread])
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_CONST

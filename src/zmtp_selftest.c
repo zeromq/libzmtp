@@ -10,7 +10,7 @@
     =========================================================================
 */
 
-#include "../include/zmtp.h"
+#include "zmtp_classes.h"
 
 int main (int argc, char *argv [])
 {
@@ -19,9 +19,10 @@ int main (int argc, char *argv [])
 //         verbose = true;
 //     else
 //         verbose = false;
-// 
+//
 //     printf ("Running self tests...\n");
 //     zmtp_msg_test (verbose);
 //     printf ("Tests passed OK\n");
+    zmtp_channel_test (false);
     return 0;
 }
