@@ -23,6 +23,7 @@ int main (int argc, char *argv [])
 //     printf ("Running self tests...\n");
 //     zmtp_msg_test (verbose);
 //     printf ("Tests passed OK\n");
+    zmtp_msg_test (false);
     zmtp_channel_test (false);
     return 0;
 }

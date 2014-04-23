@@ -210,7 +210,7 @@ s_negotiate (zmtp_channel_t *self)
         goto io_error;
 
     //  Send READY command
-    zmtp_msg_t *ready = zmtp_msg_new_const (0x04, "\5READY", 6);
+    zmtp_msg_t *ready = zmtp_msg_from_const_data (0x04, "\5READY", 6);
     assert (ready);
     zmtp_channel_send (self, ready);
     zmtp_msg_destroy (&ready);
@@ -308,7 +308,7 @@ zmtp_channel_recv (zmtp_channel_t *self)
         free (data);
         return NULL;
     }
-    return zmtp_msg_new (frame_flags & 0x04, &data, size);
+    return zmtp_msg_from_data (frame_flags & 0x04, &data, size);
 }
 
 
@@ -434,7 +434,7 @@ zmtp_channel_test (bool verbose)
         "4444",
         "55555"};
     for (int i = 0; i < 5; i++) {
-        zmtp_msg_t *msg = zmtp_msg_new_const (
+        zmtp_msg_t *msg = zmtp_msg_from_const_data (
             0, test_strings [i], strlen (test_strings [i]));
         assert (msg);
         rc = zmtp_channel_send (channel, msg);
