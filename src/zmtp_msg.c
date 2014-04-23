@@ -23,11 +23,29 @@ struct _zmtp_msg_t {
 
 
 //  --------------------------------------------------------------------------
+//  Constructor; it allocates buffer for message data.
+//  The initial content of the allocated buffer is undefined.
+
+zmtp_msg_t *
+zmtp_msg_new (byte flags, size_t size)
+{
+    zmtp_msg_t *self = (zmtp_msg_t *) zmalloc (sizeof *self);
+    assert (self);              //  For now, memory exhaustion is fatal
+    self->flags = flags;
+    self->data = (byte *) malloc (size);
+    assert (size == 0 || self->data);
+    self->size = size;
+    self->greedy = true;
+    return self;
+}
+
+
+//  --------------------------------------------------------------------------
 //  Constructor; takes ownership of data and frees it when destroying the
 //  message. Nullifies the data reference.
 
 zmtp_msg_t *
-zmtp_msg_new (byte flags, byte **data_p, size_t size)
+zmtp_msg_from_data (byte flags, byte **data_p, size_t size)
 {
     assert (data_p);
     zmtp_msg_t *self = (zmtp_msg_t *) zmalloc (sizeof *self);
@@ -46,7 +64,7 @@ zmtp_msg_new (byte flags, byte **data_p, size_t size)
 //  free it.
 
 zmtp_msg_t *
-zmtp_msg_new_const (byte flags, void *data, size_t size)
+zmtp_msg_from_const_data (byte flags, void *data, size_t size)
 {
     zmtp_msg_t *self = (zmtp_msg_t *) zmalloc (sizeof *self);
     assert (self);              //  For now, memory exhaustion is fatal
@@ -114,6 +132,13 @@ zmtp_msg_test (bool verbose)
 {
     printf (" * zmtp_msg: ");
     //  @selftest
+    zmtp_msg_t *msg = zmtp_msg_from_const_data (0, "hello", 6);
+    assert (msg);
+    assert (zmtp_msg_flags (msg) == 0);
+    assert (zmtp_msg_size (msg) == 6);
+    assert (memcmp (zmtp_msg_data (msg), "hello", 6) == 0);
+    zmtp_msg_destroy (&msg);
+    assert (msg == NULL);
     //  @end
     printf ("OK\n");
 }

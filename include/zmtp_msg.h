@@ -21,15 +21,20 @@ extern "C" {
 typedef struct _zmtp_msg_t zmtp_msg_t;
 
 //  @interface
+//  Constructor; it allocates buffer for message data.
+//  The initial content of the allocated buffer is undefined.
+zmtp_msg_t *
+    zmtp_msg_new (byte flags, size_t size);
+
 //  Constructor; takes ownership of data and frees it when destroying the
 //  message. Nullifies the data reference.
 zmtp_msg_t *
-    zmtp_msg_new (byte flags, byte **data_p, size_t size);
+    zmtp_msg_from_data (byte flags, byte **data_p, size_t size);
 
 //  Constructor that takes a constant data and does not copy, modify, or
 //  free it.
 zmtp_msg_t *
-    zmtp_msg_new_const (byte flags, void *data, size_t size);
+    zmtp_msg_from_const_data (byte flags, void *data, size_t size);
 
 //  Destructor; frees message data and destroys the message
 void
