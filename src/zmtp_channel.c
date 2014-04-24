@@ -219,7 +219,7 @@ s_negotiate (zmtp_channel_t *self)
     ready = zmtp_channel_recv (self);
     if (!ready)
         goto io_error;
-    assert ((zmtp_msg_flags (ready) & 0x04) == 0x04);
+    assert ((zmtp_msg_flags (ready) & ZMTP_MSG_COMMAND) == ZMTP_MSG_COMMAND);
     zmtp_msg_destroy (&ready);
 
     return 0;
@@ -238,9 +238,13 @@ zmtp_channel_send (zmtp_channel_t *self, zmtp_msg_t *msg)
     assert (self);
     assert (msg);
 
-    byte frame_flags = zmtp_msg_flags (msg) & 0x04;
+    byte frame_flags = 0;
+    if ((zmtp_msg_flags (msg) & ZMTP_MSG_MORE) == ZMTP_MSG_MORE)
+        frame_flags |= ZMTP_MORE_FLAG;
+    if ((zmtp_msg_flags (msg) & ZMTP_MSG_COMMAND) == ZMTP_MSG_COMMAND)
+        frame_flags |= ZMTP_COMMAND_FLAG;
     if (zmtp_msg_size (msg) > 255)
-        frame_flags |= 0x02;
+        frame_flags |= ZMTP_LARGE_FLAG;
     if (s_tcp_send (self->fd, &frame_flags, sizeof frame_flags) == -1)
         return -1;
 
@@ -283,7 +287,7 @@ zmtp_channel_recv (zmtp_channel_t *self)
     if (s_tcp_recv (self->fd, &frame_flags, 1) == -1)
         return NULL;
     //  Check large flag
-    if ((frame_flags & 0x02) == 0) {
+    if ((frame_flags & ZMTP_LARGE_FLAG) == 0) {
         byte buffer [1];
         if (s_tcp_recv (self->fd, buffer, 1) == -1)
             return NULL;
@@ -308,7 +312,12 @@ zmtp_channel_recv (zmtp_channel_t *self)
         free (data);
         return NULL;
     }
-    return zmtp_msg_from_data (frame_flags & 0x04, &data, size);
+    byte msg_flags = 0;
+    if ((frame_flags & ZMTP_MORE_FLAG) == ZMTP_MORE_FLAG)
+        msg_flags |= ZMTP_MSG_MORE;
+    if ((frame_flags & ZMTP_COMMAND_FLAG) == ZMTP_COMMAND_FLAG)
+        msg_flags |= ZMTP_MSG_COMMAND;
+    return zmtp_msg_from_data (msg_flags, &data, size);
 }
 
 

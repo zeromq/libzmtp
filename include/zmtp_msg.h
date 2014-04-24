@@ -17,6 +17,12 @@
 extern "C" {
 #endif
 
+//  Definitions of message flags.
+enum {
+    ZMTP_MSG_MORE = 1,
+    ZMTP_MSG_COMMAND = 4,
+};
+
 //  Opaque class structure
 typedef struct _zmtp_msg_t zmtp_msg_t;
 
