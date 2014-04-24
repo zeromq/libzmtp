@@ -17,6 +17,13 @@
 extern "C" {
 #endif
 
+//  Definitions ZMTP/2.0 protocol flags.
+enum {
+    ZMTP_MORE_FLAG = 1,
+    ZMTP_LARGE_FLAG = 2,
+    ZMTP_COMMAND_FLAG = 4,
+};
+
 //  Opaque class structure
 typedef struct _zmtp_channel_t zmtp_channel_t;
 
