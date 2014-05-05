@@ -5,6 +5,7 @@ pkgconfig_DATA = libzmtp.pc
 
 include_HEADERS = \
     ../include/zmtp.h \
+    ../include/zmtp_prelude.h \
     ../include/zmtp_msg.h \
     ../include/zmtp_dealer.h
 

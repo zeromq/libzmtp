@@ -497,14 +497,14 @@ typedef int SOCKET;
 
 #if defined (__WINDOWS__)
 #   if defined LIBZMTP_STATIC
-#       define ZMTP_EXPORT
+#       define CZMQ_EXPORT
 #   elif defined LIBZMTP_EXPORTS
-#       define ZMTP_EXPORT __declspec(dllexport)
+#       define CZMQ_EXPORT __declspec(dllexport)
 #   else
-#       define ZMTP_EXPORT __declspec(dllimport)
+#       define CZMQ_EXPORT __declspec(dllimport)
 #   endif
 #else
-#   define ZMTP_EXPORT
+#   define CZMQ_EXPORT
 #endif
 
 #endif

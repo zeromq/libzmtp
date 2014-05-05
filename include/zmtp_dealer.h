@@ -24,7 +24,7 @@ typedef struct _zmtp_dealer_t zmtp_dealer_t;
 //  Constructor; takes ownership of data and frees it when destroying the
 //  message. Nullifies the data reference.
 zmtp_dealer_t *
-    zmtp_dealer_new ();
+    zmtp_dealer_new (void);
 
 void
     zmtp_dealer_destroy (zmtp_dealer_t **self_p);
