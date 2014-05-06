@@ -56,18 +56,20 @@ zmtp_dealer_destroy (zmtp_dealer_t **self_p)
 int
 zmtp_dealer_ipc_connect (zmtp_dealer_t *self, const char *path)
 {
-    if (!self)
-        return -1;
+    assert (self);
     if (self->channel)  //  At most one channel per socket now
         return -1;
-    zmtp_channel_t *channel = zmtp_channel_new ();
-    if (!channel)
-        return -1;
-    if (zmtp_channel_ipc_connect (channel, path) == -1) {
-        zmtp_channel_destroy (&channel);
+
+    //  Create new channel if possible
+    self->channel = zmtp_channel_new ();
+    if (!self->channel)
+        return -1;   
+
+    //  Try to connect channel to specified endpoint
+    if (zmtp_channel_ipc_connect (self->channel, path) == -1) {
+        zmtp_channel_destroy (&self->channel);
         return -1;
     }
-    self->channel = channel;
     return 0;
 }
 
@@ -79,18 +81,20 @@ int
 zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
                          const char *addr, unsigned short port)
 {
-    if (!self)
-        return -1;
+    assert (self);
     if (self->channel)  //  At most one channel per socket now
         return -1;
-    zmtp_channel_t *channel = zmtp_channel_new ();
-    if (!channel)
+    
+    //  Create new channel if possible
+    self->channel = zmtp_channel_new ();
+    if (!self->channel)
         return -1;
-    if (zmtp_channel_tcp_connect (channel, addr, port) == -1) {
-        zmtp_channel_destroy (&channel);
+    
+    //  Try to connect channel to specified endpoint
+    if (zmtp_channel_tcp_connect (self->channel, addr, port) == -1) {
+        zmtp_channel_destroy (&self->channel);
         return -1;
     }
-    self->channel = channel;
     return 0;
 }
 
@@ -101,10 +105,10 @@ zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
 int
 zmtp_dealer_send (zmtp_dealer_t *self, zmtp_msg_t *msg)
 {
-    if (!self)
-        return -1;
+    assert (self);
     if (!self->channel)
         return -1;
+    
     return zmtp_channel_send (self->channel, msg);
 }
 
@@ -115,10 +119,10 @@ zmtp_dealer_send (zmtp_dealer_t *self, zmtp_msg_t *msg)
 zmtp_msg_t *
 zmtp_dealer_recv (zmtp_dealer_t *self)
 {
-    if (!self)
-        return NULL;
+    assert (self);
     if (!self->channel)
         return NULL;
+    
     return zmtp_channel_recv (self->channel);
 }
 

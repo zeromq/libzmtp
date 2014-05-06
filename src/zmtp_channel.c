@@ -80,10 +80,12 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
     if (strlen (path) >= sizeof remote.sun_path)
         return -1;
     strcpy (remote.sun_path, path);
+    
     //  Create socket
     const int s = socket (AF_UNIX, SOCK_STREAM, 0);
     if (s == -1)
         return -1;
+    
     //  Connect the socket
     const int rc =
         connect (s, (const struct sockaddr *) &remote, sizeof remote);
@@ -112,10 +114,12 @@ zmtp_channel_tcp_connect (zmtp_channel_t *self,
 
     if (self->fd != -1)
         return -1;
+    
     //  Create socket
     const int s = socket (AF_INET, SOCK_STREAM, 0);
     if (s == -1)
         return -1;
+    
     //  Resolve address
     const struct addrinfo hints = {
         .ai_family   = AF_INET,
@@ -374,30 +378,37 @@ s_echo_serv (void *arg)
     //  Create socket
     const int s = socket (AF_INET, SOCK_STREAM, 0);
     assert (s != -1);
+    
     //  Allow port reuse
     const int on = 1;
     int rc = setsockopt (s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof on);
     assert (rc == 0);
+    
     //  Fill address
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons (params->port);
     server_addr.sin_addr.s_addr = htonl (INADDR_ANY);
+    
     //  Bind socket
     rc = bind (s, (struct sockaddr *) &server_addr, sizeof server_addr);
     assert (rc == 0);
+    
     //  Listen for connections
     rc = listen (s, 1);
     assert (rc != -1);
+    
     //  Accept connection
     int fd = accept (s, NULL, NULL);
     assert (fd != -1);
+    
     //  Set non-blocking mode
     const int flags = fcntl (fd, F_GETFL, 0);
     assert (flags != -1);
     rc = fcntl (fd, F_SETFL, flags | O_NONBLOCK);
     assert (rc == 0);
     unsigned char buf [80];
+    
     //  Echo all received data
     while (1) {
         struct pollfd pollfd;
@@ -503,7 +514,9 @@ zmtp_channel_test (bool verbose)
         "22",
         "333",
         "4444",
-        "55555"};
+        "55555"
+    };
+        
     for (int i = 0; i < 5; i++) {
         zmtp_msg_t *msg = zmtp_msg_from_const_data (
             0, test_strings [i], strlen (test_strings [i]));
