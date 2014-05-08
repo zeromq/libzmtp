@@ -80,12 +80,16 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
     if (strlen (path) >= sizeof remote.sun_path)
         return -1;
     strcpy (remote.sun_path, path);
-    
+
+    //  Initial '@' in the path designates abstract namespace.
+    //  See unix(7) for details.
+    if (path [0] == '@')
+        remote.sun_path [0] = '\0';
     //  Create socket
     const int s = socket (AF_UNIX, SOCK_STREAM, 0);
     if (s == -1)
         return -1;
-    
+
     //  Connect the socket
     const int rc =
         connect (s, (const struct sockaddr *) &remote, sizeof remote);
