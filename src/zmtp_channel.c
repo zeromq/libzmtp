@@ -74,6 +74,7 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
 {
     assert (self);
 
+    socklen_t addrlen = 0;
     if (self->fd != -1)
         return -1;
     struct sockaddr_un remote = { .sun_family = AF_UNIX };
@@ -83,8 +84,12 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
 
     //  Initial '@' in the path designates abstract namespace.
     //  See unix(7) for details.
-    if (path [0] == '@')
+    if (path [0] == '@') {
         remote.sun_path [0] = '\0';
+        addrlen = (socklen_t) (sizeof (sa_family_t) + strlen (path));
+    }
+    else
+        addrlen = (socklen_t) sizeof remote;
     //  Create socket
     const int s = socket (AF_UNIX, SOCK_STREAM, 0);
     if (s == -1)
@@ -92,7 +97,7 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
 
     //  Connect the socket
     const int rc =
-        connect (s, (const struct sockaddr *) &remote, sizeof remote);
+        connect (s, (const struct sockaddr *) &remote, addrlen);
     if (rc == -1) {
         close (s);
         return -1;
