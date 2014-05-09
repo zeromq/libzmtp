@@ -14,7 +14,13 @@ libzmtp_la_SOURCES = \
     zmtp_msg.c \
     zmtp_channel.h \
     zmtp_channel.c \
-    zmtp_dealer.c
+    zmtp_dealer.c \
+    zmtp_endpoint.h \
+    zmtp_endpoint.c \
+    zmtp_ipc_endpoint.h \
+    zmtp_ipc_endpoint.c \
+    zmtp_tcp_endpoint.h \
+    zmtp_tcp_endpoint.c
 
 AM_CFLAGS = -g
 AM_CPPFLAGS = -I$(top_srcdir)/include

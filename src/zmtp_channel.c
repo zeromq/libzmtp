@@ -74,40 +74,25 @@ zmtp_channel_ipc_connect (zmtp_channel_t *self, const char *path)
 {
     assert (self);
 
-    socklen_t addrlen = 0;
     if (self->fd != -1)
         return -1;
-    struct sockaddr_un remote = { .sun_family = AF_UNIX };
-    if (strlen (path) >= sizeof remote.sun_path)
-        return -1;
-    strcpy (remote.sun_path, path);
 
-    //  Initial '@' in the path designates abstract namespace.
-    //  See unix(7) for details.
-    if (path [0] == '@') {
-        remote.sun_path [0] = '\0';
-        addrlen = (socklen_t) (sizeof (sa_family_t) + strlen (path));
-    }
-    else
-        addrlen = (socklen_t) sizeof remote;
-    //  Create socket
-    const int s = socket (AF_UNIX, SOCK_STREAM, 0);
-    if (s == -1)
+    zmtp_endpoint_t *endpoint =
+        (zmtp_endpoint_t *) zmtp_ipc_endpoint_new (path);
+    if (endpoint == NULL)
         return -1;
 
-    //  Connect the socket
-    const int rc =
-        connect (s, (const struct sockaddr *) &remote, addrlen);
-    if (rc == -1) {
-        close (s);
+    self->fd = zmtp_endpoint_connect (endpoint);
+    zmtp_endpoint_destroy (&endpoint);
+    if (self->fd == -1)
         return -1;
-    }
-    self->fd = s;
+
     if (s_negotiate (self) == -1) {
         close (self->fd);
         self->fd = -1;
         return -1;
     }
+
     return 0;
 }
 
@@ -123,39 +108,23 @@ zmtp_channel_tcp_connect (zmtp_channel_t *self,
 
     if (self->fd != -1)
         return -1;
-    
-    //  Create socket
-    const int s = socket (AF_INET, SOCK_STREAM, 0);
-    if (s == -1)
+
+    zmtp_endpoint_t *endpoint =
+        (zmtp_endpoint_t *) zmtp_tcp_endpoint_new (addr, port);
+    if (endpoint == NULL)
         return -1;
-    
-    //  Resolve address
-    const struct addrinfo hints = {
-        .ai_family   = AF_INET,
-        .ai_socktype = SOCK_STREAM,
-        .ai_flags    = AI_NUMERICHOST | AI_NUMERICSERV
-    };
-    char service [8 + 1];
-    snprintf (service, sizeof service, "%u", port);
-    struct addrinfo *result = NULL;
-    if (getaddrinfo (addr, service, &hints, &result)) {
-        close (s);
+
+    self->fd = zmtp_endpoint_connect (endpoint);
+    zmtp_endpoint_destroy (&endpoint);
+    if (self->fd == -1)
         return -1;
-    }
-    assert (result);
-    //  Create socket
-    const int rc = connect (s, result->ai_addr, result->ai_addrlen);
-    freeaddrinfo (result);
-    if (rc == -1) {
-        close (s);
-        return -1;
-    }
-    self->fd = s;
+
     if (s_negotiate (self) == -1) {
         close (self->fd);
         self->fd = -1;
         return -1;
     }
+
     return 0;
 }
 
