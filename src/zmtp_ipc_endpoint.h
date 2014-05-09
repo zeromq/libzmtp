@@ -1,7 +1,6 @@
 /*  =========================================================================
-    zbroker_classes - all classes in proper order for building
+    zmtp_ipc_endpoint - IPC endpoint class
 
-    -------------------------------------------------------------------------
     Copyright (c) contributors as noted in the AUTHORS file.
     This file is part of libzmtp, the C ZMTP stack.
 
@@ -11,16 +10,24 @@
     =========================================================================
 */
 
-#ifndef __ZBROKE_CLASSES_H_INCLUDED__
-#define __ZBROKE_CLASSES_H_INCLUDED__
+#ifndef __ZMTP_IPC_ENDPOINT_H_INCLUDED__
+#define __ZMTP_IPC_ENDPOINT_H_INCLUDED__
 
-//  External API
-#include "../include/zmtp.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-//  Internal API
-#include "zmtp_channel.h"
 #include "zmtp_endpoint.h"
-#include "zmtp_ipc_endpoint.h"
-#include "zmtp_tcp_endpoint.h"
+
+typedef struct zmtp_ipc_endpoint zmtp_ipc_endpoint_t;
+
+zmtp_ipc_endpoint_t *
+    zmtp_ipc_endpoint_new (const char *path);
+
+void
+    zmtp_ipc_endpoint_destroy (zmtp_ipc_endpoint_t **self_p);
+
+int
+    zmtp_ipc_endpoint_connect (zmtp_ipc_endpoint_t *self);
 
 #endif
