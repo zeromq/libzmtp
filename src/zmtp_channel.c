@@ -28,6 +28,8 @@ struct _zmtp_channel_t {
     int fd;             //  BSD socket handle
 };
 
+static zmtp_endpoint_t *
+    s_endpoint_from_str (const char *endpoint_str);
 static int
     s_negotiate (zmtp_channel_t *self);
 static int
@@ -126,6 +128,62 @@ zmtp_channel_tcp_connect (zmtp_channel_t *self,
     }
 
     return 0;
+}
+
+
+//  --------------------------------------------------------------------------
+//  Connect channel
+
+int
+zmtp_channel_connect (zmtp_channel_t *self, const char *endpoint_str)
+{
+    assert (self);
+
+    if (self->fd != -1)
+        return -1;
+
+    zmtp_endpoint_t *endpoint = s_endpoint_from_str (endpoint_str);
+    if (endpoint == NULL)
+        return -1;
+
+    self->fd = zmtp_endpoint_connect (endpoint);
+    zmtp_endpoint_destroy (&endpoint);
+    if (self->fd == -1)
+        return -1;
+
+    if (s_negotiate (self) == -1) {
+        close (self->fd);
+        self->fd = -1;
+        return -1;
+    }
+
+    return 0;
+}
+
+
+static zmtp_endpoint_t *
+s_endpoint_from_str (const char *endpoint_str)
+{
+    if (strncmp (endpoint_str, "ipc://", 6) == 0)
+        return (zmtp_endpoint_t *)
+            zmtp_ipc_endpoint_new (endpoint_str + 6);
+    else
+    if (strncmp (endpoint_str, "tcp://", 6) == 0) {
+        char *colon = strrchr (endpoint_str + 6, ':');
+        if (colon == NULL)
+            return NULL;
+        else {
+            const size_t addr_len = colon - endpoint_str - 6;
+            char addr [addr_len + 1];
+            memcpy (addr, endpoint_str + 6, addr_len);
+            addr [addr_len] = '\0';
+            const unsigned short port = atoi (colon + 1);
+            return (zmtp_endpoint_t *)
+                zmtp_tcp_endpoint_new (addr, port);
+        }
+    }
+    else
+        return NULL;
 }
 
 
