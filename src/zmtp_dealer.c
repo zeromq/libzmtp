@@ -100,6 +100,29 @@ zmtp_dealer_tcp_connect (zmtp_dealer_t *self,
 
 
 //  --------------------------------------------------------------------------
+//
+
+int
+zmtp_dealer_connect (zmtp_dealer_t *self, const char *endpoint_str)
+{
+    assert (self);
+    if (self->channel)
+        return -1;
+
+    //  Create new channel if possible
+    self->channel = zmtp_channel_new ();
+    if (!self->channel)
+        return -1;
+
+    //  Try to connect channel to specified endpoint
+    if (zmtp_channel_connect (self->channel, endpoint_str) == -1) {
+        zmtp_channel_destroy (&self->channel);
+        return -1;
+    }
+    return 0;
+}
+
+//  --------------------------------------------------------------------------
 //  Send a message on a socket
 
 int
