@@ -49,6 +49,10 @@ int
 int
     zmtp_channel_connect (zmtp_channel_t *test, const char *endpoint_str);
 
+//  Listen for new connection
+int
+    zmtp_channel_listen (zmtp_channel_t *test, const char *endpoint_str);
+
 //  Send a ZMTP message to the channel
 int
     zmtp_channel_send (zmtp_channel_t *self, zmtp_msg_t *msg);

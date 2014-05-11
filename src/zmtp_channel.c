@@ -161,6 +161,35 @@ zmtp_channel_connect (zmtp_channel_t *self, const char *endpoint_str)
 }
 
 
+//  --------------------------------------------------------------------------
+//  Connect channel
+
+int
+zmtp_channel_listen (zmtp_channel_t *self, const char *endpoint_str)
+{
+    assert (self);
+
+    if (self->fd != -1)
+        return -1;
+
+    zmtp_endpoint_t *endpoint = s_endpoint_from_str (endpoint_str);
+    if (endpoint == NULL)
+        return -1;
+
+    self->fd = zmtp_endpoint_listen (endpoint);
+    zmtp_endpoint_destroy (&endpoint);
+    if (self->fd == -1)
+        return -1;
+
+    if (s_negotiate (self) == -1) {
+        close (self->fd);
+        self->fd = -1;
+        return -1;
+    }
+
+    return 0;
+}
+
 static zmtp_endpoint_t *
 s_endpoint_from_str (const char *endpoint_str)
 {

@@ -30,4 +30,7 @@ void
 int
     zmtp_ipc_endpoint_connect (zmtp_ipc_endpoint_t *self);
 
+int
+    zmtp_ipc_endpoint_listen (zmtp_ipc_endpoint_t *self);
+
 #endif

@@ -20,6 +20,7 @@ extern "C" {
 struct zmtp_endpoint {
     void (*destroy) (struct zmtp_endpoint **self_p);
     int (*connect) (struct zmtp_endpoint *self);
+    int (*listen) (struct zmtp_endpoint *self);
 };
 
 typedef struct zmtp_endpoint zmtp_endpoint_t;
@@ -29,5 +30,8 @@ void
 
 int
     zmtp_endpoint_connect (zmtp_endpoint_t *self);
+
+int
+    zmtp_endpoint_listen (zmtp_endpoint_t *self);
 
 #endif

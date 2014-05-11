@@ -40,6 +40,9 @@ int
     zmtp_dealer_connect (zmtp_dealer_t *self, const char *endpoint_str);
 
 int
+    zmtp_dealer_listen (zmtp_dealer_t *self, const char *endpoint_str);
+
+int
     zmtp_dealer_send (zmtp_dealer_t *self, zmtp_msg_t *msg);
 
 zmtp_msg_t *
