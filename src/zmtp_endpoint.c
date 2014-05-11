@@ -39,3 +39,16 @@ zmtp_endpoint_connect (zmtp_endpoint_t *self)
 
     return self->connect (self);
 }
+
+
+//  --------------------------------------------------------------------------
+//  Listen for new connection on endpoint
+
+int
+zmtp_endpoint_listen (zmtp_endpoint_t *self)
+{
+    assert (self);
+    assert (self->listen);
+
+    return self->listen (self);
+}

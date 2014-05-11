@@ -29,6 +29,7 @@ zmtp_tcp_endpoint_new (const char *ip_addr, unsigned short port)
     //  Initialize base class
     self->base = (zmtp_endpoint_t) {
         .connect = (int (*) (zmtp_endpoint_t *)) zmtp_tcp_endpoint_connect,
+        .listen = (int (*) (zmtp_endpoint_t *)) zmtp_tcp_endpoint_listen,
         .destroy = (void (*) (zmtp_endpoint_t **)) zmtp_tcp_endpoint_destroy,
     };
 
@@ -79,4 +80,28 @@ zmtp_tcp_endpoint_connect (zmtp_tcp_endpoint_t *self)
     }
 
     return s;
+}
+
+int
+zmtp_tcp_endpoint_listen (zmtp_tcp_endpoint_t *self)
+{
+    assert (self);
+
+    const int s = socket (AF_INET, SOCK_STREAM, 0);
+    if (s == -1)
+        return -1;
+
+    const int flag = 1;
+    int rc = setsockopt (s, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof flag);
+    assert (rc == 0);
+
+    rc = bind (
+        s, self->addrinfo->ai_addr, self->addrinfo->ai_addrlen);
+    if (rc == 0) {
+        rc = listen (s, 1);
+        if (rc == 0)
+            rc = accept (s, NULL, NULL);
+    }
+    close (s);
+    return rc;
 }

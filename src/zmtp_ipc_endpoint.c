@@ -28,6 +28,7 @@ zmtp_ipc_endpoint_new (const char *path)
     //  Initialize base class
     self->base = (zmtp_endpoint_t) {
         .connect = (int (*) (zmtp_endpoint_t *)) zmtp_ipc_endpoint_connect,
+        .listen = (int (*) (zmtp_endpoint_t *)) zmtp_ipc_endpoint_listen,
         .destroy = (void (*) (zmtp_endpoint_t **)) zmtp_ipc_endpoint_destroy,
     };
 
@@ -84,4 +85,29 @@ zmtp_ipc_endpoint_connect (zmtp_ipc_endpoint_t *self)
     }
 
     return s;
+}
+
+int
+zmtp_ipc_endpoint_listen (zmtp_ipc_endpoint_t *self)
+{
+    assert (self);
+
+    const int s = socket (AF_UNIX, SOCK_STREAM, 0);
+    if (s == -1)
+        return -1;
+
+    //  Compute address length
+    const socklen_t addrlen =
+        self->sockaddr.sun_path [0] == '\0'
+            ? sizeof (sa_family_t) + 1 + strlen (self->sockaddr.sun_path + 1)
+            : sizeof self->sockaddr;
+
+    int rc = bind (s, &self->sockaddr, addrlen);
+    if (rc == 0) {
+        rc = listen (s, 1);
+        if (rc == 0)
+            rc = accept (s, NULL, NULL);
+    }
+    close (s);
+    return rc;
 }

@@ -30,4 +30,7 @@ void
 int
     zmtp_tcp_endpoint_connect (zmtp_tcp_endpoint_t *self);
 
+int
+    zmtp_tcp_endpoint_listen (zmtp_tcp_endpoint_t *self);
+
 #endif
