@@ -78,7 +78,7 @@ zmtp_ipc_endpoint_connect (zmtp_ipc_endpoint_t *self)
             : sizeof self->sockaddr;
 
     //  Connect the socket
-    const int rc = connect (s, &self->sockaddr, addrlen);
+    const int rc = connect (s, (const struct sockaddr *) &self->sockaddr, addrlen);
     if (rc == -1) {
         close (s);
         return -1;
@@ -102,7 +102,7 @@ zmtp_ipc_endpoint_listen (zmtp_ipc_endpoint_t *self)
             ? sizeof (sa_family_t) + 1 + strlen (self->sockaddr.sun_path + 1)
             : sizeof self->sockaddr;
 
-    int rc = bind (s, &self->sockaddr, addrlen);
+    int rc = bind (s, (const struct sockaddr *) &self->sockaddr, addrlen);
     if (rc == 0) {
         rc = listen (s, 1);
         if (rc == 0)
